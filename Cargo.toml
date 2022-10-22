@@ -1,0 +1,8 @@
+[package]
+authors = ["Connor Slade <connor@connorcode.com>"]
+edition = "2021"
+name = "coding_hat"
+version = "0.1.0"
+
+[dependencies]
+afire = {version = "1.2.0", features = ["extensions", "tracing"]}
