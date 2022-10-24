@@ -1,0 +1,14 @@
+[
+  {
+    "name": "java",
+    "path": "java",
+    "imageName": "java-runner",
+    "sourcePath": "Solution.java"
+  },
+  {
+    "name": "python",
+    "path": "python",
+    "imageName": "python-runner",
+    "sourcePath": "user.py"
+  }
+]
