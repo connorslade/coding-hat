@@ -6,6 +6,7 @@ version = "0.1.0"
 
 [dependencies]
 afire = {version = "1.2.0", features = ["extensions", "tracing"]}
+comrak = "0.14.0"
 ctrlc = "3.2.3"
 parking_lot = "0.12.1"
 rusqlite = {version = "0.28.0", features = ["bundled"]}

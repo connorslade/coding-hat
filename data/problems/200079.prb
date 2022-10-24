@@ -1,0 +1,29 @@
+# DOCUMENT
+    Write a function findCats(phrase) that counts the number of occurrences of "cat" in a string.
+    For example, findCats("concatenate") returns 1 because "cat" occurs 1 time.
+
+# HINT
+    Loop through the entire string except for the last 2 letters to avoid an index out of bounds error.
+
+# CODE
+    def findCats(phrase):
+        count = 0
+        for i in range(len(phrase) - 2):
+            if phrase[i:i+3] == "cat":
+                count += 1
+        return count
+
+# CASES
+    "concatenate"                                  -> 1
+    "the cat toy catalog was destroyed by the cat" -> 3
+    "catch me if you can"                          -> 1
+    "can the cat catch the caterpillar"            -> 3
+    "one jump ahead of the hit man"                -> 0
+    "this is complicated"                          -> 1
+    "can you locate all the sophisticated cats"    -> 3
+    "where is my mind"                             -> 0
+    "catatonic cats are catching me"               -> 3
+
+# TAGS
+    lang:python
+    section:pythonloops
