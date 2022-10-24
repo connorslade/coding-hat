@@ -1,12 +1,27 @@
-use std::mem;
+use comrak::{markdown_to_html, ComrakOptions};
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref COMRAK_OPTIONS: ComrakOptions = {
+        let mut opt = comrak::ComrakOptions::default();
+        opt.extension.table = true;
+        opt.extension.strikethrough = true;
+        opt.extension.autolink = true;
+        opt.extension.header_ids = Some("".to_owned());
+        opt.extension.footnotes = true;
+        opt.parse.smart = true;
+        opt.render.unsafe_ = true;
+        opt
+    };
+}
 
 #[derive(Debug)]
 pub struct Problem {
-    document: String,
-    hint: String,
-    code: String,
-    cases: Vec<Case>,
-    tags: Vec<Tag>,
+    pub document: String,
+    pub hint: String,
+    pub code: String,
+    pub cases: Vec<Case>,
+    pub tags: Vec<Tag>,
 }
 
 #[derive(Debug)]
@@ -17,10 +32,12 @@ pub struct Tag(TagType, String);
 
 #[derive(Debug)]
 pub enum Type {
-    Int(u64),
+    Int(i64),
     Float(f64),
+    Bool(bool),
     String(String),
-    Array(Vec<Type>),
+    /// bool is weather the array is an ArrayList (only affects java)
+    Array(Vec<Type>, bool),
 }
 
 #[derive(Debug)]
@@ -40,8 +57,8 @@ impl Problem {
         for (name, content) in get_sections(&raw) {
             let content = un_indent(&content);
             match name.to_uppercase().as_str() {
-                "DOCUMENT" => document = content,
-                "HINT" => hint = content,
+                "DOCUMENT" => document = markdown_to_html(&content, &COMRAK_OPTIONS),
+                "HINT" => hint = markdown_to_html(&content, &COMRAK_OPTIONS),
                 "CODE" => code = content,
                 "CASES" => cases = parse_cases(&content),
                 "TAGS" => {
@@ -82,6 +99,44 @@ impl Tag {
         };
 
         Some(Self(key, parts[1].trim().to_owned()))
+    }
+}
+
+impl Type {
+    fn parse(mut raw: &str) -> Option<Self> {
+        raw = raw.trim();
+
+        // String
+        if let Some(i) = raw.strip_prefix("\"").and_then(|x| x.strip_suffix("\"")) {
+            return Some(Type::String(i.to_owned()));
+        }
+
+        // Bool
+        if matches!(raw, "true" | "false") {
+            return Some(Type::Bool(raw == "true"));
+        }
+
+        // Int
+        if let Ok(i) = raw.parse::<i64>() {
+            return Some(Type::Int(i));
+        }
+
+        // Float
+        if let Ok(i) = raw.parse::<f64>() {
+            return Some(Type::Float(i));
+        }
+
+        // Arrays
+        if let Some(i) = raw.strip_prefix("{").and_then(|x| x.strip_suffix("}")) {
+            return Some(Type::Array(parse_case_input(i), false));
+        }
+
+        // Array Lists
+        if let Some(i) = raw.strip_prefix("[").and_then(|x| x.strip_suffix("]")) {
+            return Some(Type::Array(parse_case_input(i), true));
+        }
+
+        None
     }
 }
 
@@ -177,5 +232,36 @@ fn un_indent(raw: &str) -> String {
 fn parse_cases(raw: &str) -> Vec<Case> {
     let mut out = Vec::new();
 
+    for i in raw.lines() {
+        let (input, output) = i.rsplit_once("->").unwrap();
+        out.push(Case(parse_case_input(input), Type::parse(output).unwrap()));
+    }
+
+    out
+}
+
+fn parse_case_input(raw: &str) -> Vec<Type> {
+    let chars = raw.chars().collect::<Vec<_>>();
+    let mut out = Vec::new();
+    let mut working = String::new();
+    let mut in_string = false;
+
+    let mut i = 0;
+    while i < chars.len() {
+        let e = chars[i];
+        match e {
+            '"' => in_string ^= true,
+            ',' if !in_string => {
+                out.push(Type::parse(&working).unwrap());
+                working.clear();
+            }
+            _ => {}
+        }
+
+        working.push(e);
+        i += 1;
+    }
+
+    out.push(Type::parse(&working).unwrap());
     out
 }

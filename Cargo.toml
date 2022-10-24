@@ -8,6 +8,7 @@ version = "0.1.0"
 afire = {version = "1.2.0", features = ["extensions", "tracing"]}
 comrak = "0.14.0"
 ctrlc = "3.2.3"
+lazy_static = "1.4.0"
 parking_lot = "0.12.1"
 rusqlite = {version = "0.28.0", features = ["bundled"]}
 simple_config_parser = "1.0.0"

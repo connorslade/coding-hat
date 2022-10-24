@@ -139,6 +139,7 @@ dependencies = [
  "afire",
  "comrak",
  "ctrlc",
+ "lazy_static",
  "parking_lot",
  "rusqlite",
  "simple_config_parser",
