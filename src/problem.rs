@@ -85,7 +85,7 @@ impl Tag {
     fn parse(raw: &str, path: &str) -> Option<Self> {
         let parts = raw.split_terminator([',', ':', '=']).collect::<Vec<_>>();
         if parts.len() != 2 {
-            println!("[-] WARN: Error parsing tag `{}` in `{}`", raw, path);
+            println!("[-] WARN: Error parsing tag `{}` in `{}`", raw.trim(), path);
             return None;
         }
 
@@ -254,6 +254,9 @@ fn parse_case_input(raw: &str) -> Vec<Type> {
             ',' if !in_string => {
                 out.push(Type::parse(&working).unwrap());
                 working.clear();
+
+                i += 1;
+                continue;
             }
             _ => {}
         }

@@ -12,15 +12,8 @@ mod app;
 mod config;
 mod problem;
 use app::App;
-use problem::Problem;
 
 fn main() {
-    dbg!(Problem::load(
-        fs::read_to_string("data/problems/200079.prb").unwrap(),
-        "200079.prb"
-    ));
-    return;
-
     // Make sure web dist has been built
     if !PathBuf::from("web/dist").exists() {
         println!("[-] Web dist not built!");
