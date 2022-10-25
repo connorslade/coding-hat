@@ -1,5 +1,7 @@
-# NAME
-    Cat Counting
+# META
+    name:    Cat Counting
+    lang:    python
+    section: pythonloops
 
 # DOCUMENT
     Write a function findCats(phrase) that counts the number of occurrences of "cat" in a string.
@@ -7,6 +9,11 @@
 
 # HINT
     Loop through the entire string except for the last 2 letters to avoid an index out of bounds error.
+
+# BASECODE
+    def findCats(phrase):
+        # Your code here!
+        pass
 
 # CODE
     def findCats(phrase):
@@ -26,7 +33,3 @@
     "can you locate all the sophisticated cats"    -> 3
     "where is my mind"                             -> 0
     "catatonic cats are catching me"               -> 3
-
-# TAGS
-    lang:python
-    section:pythonloops

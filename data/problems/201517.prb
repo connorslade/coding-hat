@@ -1,0 +1,28 @@
+# META
+    name:    Even A
+    lang:    java
+    section: Java String-1
+
+# DOCUMENT
+    Write a method evenA(String phrase) which returns true if the first occurance of the letter "a" is at an even index.
+    For example, evenA("apple") returns true because a occurs at index 0 which is even.
+
+# BASECODE
+    public boolean evenA(String phrase) {
+        // Your code here!
+    }
+
+# CODE
+    public boolean evenA(String phrase){
+        return phrase.indexOf(\"a\") % 2 == 0;
+    }
+
+# CASES
+    "apple"                                    -> true
+    "banana"                                   -> false
+    "None but ourselves can free our minds"    -> true
+    "Excuse me while I kiss the sky"           -> false
+    "Take my hand and we'll make it - I swear" -> false
+    "Hello I am happy!"                        -> true
+    "a a a"                                    -> false
+    "aa"                                       -> true

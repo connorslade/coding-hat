@@ -1,7 +1,7 @@
 use afire::{Method, Response, Server};
 use serde_json::json;
 
-use crate::App;
+use crate::{problem::Languge, App};
 
 pub fn attach(server: &mut Server<App>) {
     server.stateful_route(Method::GET, "/api/problem/{id}", |app, req| {
@@ -15,14 +15,21 @@ pub fn attach(server: &mut Server<App>) {
             }
         };
 
-        let pub_cases = problem.public_cases();
+        let pub_cases = problem
+            .cases
+            .iter()
+            .take(problem.tags.show_cases.unwrap_or(4))
+            .collect::<Vec<_>>();
+
         Response::new().text(json!({
             "name": problem.name,
             "text": problem.document,
             "hint": problem.hint,
+            "baseCode": problem.base_code,
             "cases": pub_cases,
             "moreCases": problem.cases.len() > pub_cases.len(),
-            "lang": problem.lang()
+            "lang": problem.tags.lang.unwrap_or(Languge::Java),
+            "section": problem.tags.section
         }))
     });
 }

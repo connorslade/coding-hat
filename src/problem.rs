@@ -18,12 +18,20 @@ lazy_static! {
 
 #[derive(Debug)]
 pub struct Problem {
+    /// The name of the problem
     pub name: String,
+    /// Instructions for the problem
     pub document: String,
-    pub hint: String,
+    /// Optonal hint
+    pub hint: Option<String>,
+    /// The starter code
+    pub base_code: String,
+    /// Working example code
     pub code: String,
+    /// Test cases
     pub cases: Vec<Case>,
-    pub tags: Vec<Tag>,
+    /// Optinal meta info
+    pub tags: Tags,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -40,11 +48,14 @@ pub enum Type {
     Array(Vec<Type>, bool),
 }
 
-#[derive(Debug)]
-pub enum Tag {
-    Languge(Languge),
-    Section(String),
-    ShowCases(usize),
+#[derive(Debug, Default)]
+pub struct Tags {
+    /// The languge used for the problem
+    pub lang: Option<Languge>,
+    /// The name of the section the problem is in
+    pub section: Option<String>,
+    /// The numbber of cases to show the user
+    pub show_cases: Option<usize>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize)]
@@ -57,25 +68,21 @@ impl Problem {
     pub fn load(raw: String, path: &str) -> Self {
         let mut name = String::new();
         let mut document = String::new();
-        let mut hint = String::new();
+        let mut hint = None;
+        let mut base_code = String::new();
         let mut code = String::new();
         let mut cases = Vec::new();
-        let mut tags = Vec::new();
+        let mut tags = Tags::default();
 
         for (section, content) in get_sections(&raw) {
             let content = un_indent(&content);
             match section.to_uppercase().as_str() {
-                "NAME" => name = content,
+                "META" => name = parse_meta(&mut tags, &content, path),
                 "DOCUMENT" => document = markdown_to_html(&content, &COMRAK_OPTIONS),
-                "HINT" => hint = markdown_to_html(&content, &COMRAK_OPTIONS),
+                "HINT" => hint = Some(markdown_to_html(&content, &COMRAK_OPTIONS)),
+                "BASECODE" => base_code = content,
                 "CODE" => code = content,
                 "CASES" => cases = parse_cases(&content),
-                "TAGS" => {
-                    tags = content
-                        .lines()
-                        .filter_map(|x| Tag::parse(x, path))
-                        .collect()
-                }
                 _ => println!("[-] WARN: Unknown section `{}` in `{}`", section, path),
             }
         }
@@ -84,61 +91,11 @@ impl Problem {
             name,
             document,
             hint,
+            base_code,
             code,
             cases,
             tags,
         }
-    }
-
-    pub fn public_cases(&self) -> Vec<Case> {
-        let count = self
-            .tags
-            .iter()
-            .find(|x| matches!(x, Tag::ShowCases(_)))
-            .map(|x| match x {
-                Tag::ShowCases(i) => i,
-                _ => unreachable!(),
-            })
-            .unwrap_or(&4);
-        self.cases.iter().take(*count).cloned().collect()
-    }
-
-    pub fn lang(&self) -> Languge {
-        *self
-            .tags
-            .iter()
-            .find(|x| matches!(x, Tag::Languge(_)))
-            .map(|x| match x {
-                Tag::Languge(x) => x,
-                _ => unreachable!(),
-            })
-            .unwrap_or(&Languge::Python)
-    }
-}
-
-impl Tag {
-    fn parse(raw: &str, path: &str) -> Option<Self> {
-        let parts = raw.split_terminator([',', ':', '=']).collect::<Vec<_>>();
-        if parts.len() != 2 {
-            println!("[-] WARN: Error parsing tag `{}` in `{}`", raw.trim(), path);
-            return None;
-        }
-
-        let val = parts[1].trim();
-        let key = match parts[0].to_lowercase().trim() {
-            "lang" | "languge" => Tag::Languge(match val {
-                "java" => Languge::Java,
-                "python" => Languge::Python,
-                _ => panic!("Unknown languge `{}`", val),
-            }),
-            "section" => Tag::Section(val.to_owned()),
-            _ => {
-                println!("[-] WARN: Unknown tag `{}` in `{}`", parts[0], path);
-                return None;
-            }
-        };
-
-        Some(key)
     }
 }
 
@@ -199,9 +156,11 @@ fn get_sections(raw: &str) -> Vec<(String, String)> {
             continue;
         }
 
-        if in_section && e == '\n' && !matches!(chars[i + 1], ' ' | '\t') {
+        if in_section && e == '\n' && (i + 1 >= chars.len() || !matches!(chars[i + 1], ' ' | '\t'))
+        {
             out.push((name.clone(), working.clone()));
             working.clear();
+            name.clear();
             in_section = false;
         }
 
@@ -307,4 +266,34 @@ fn parse_case_input(raw: &str) -> Vec<Type> {
 
     out.push(Type::parse(&working).unwrap());
     out
+}
+
+fn parse_meta(tags: &mut Tags, raw: &str, path: &str) -> String {
+    let mut name = None;
+
+    for i in raw.lines() {
+        let parts = i.split_terminator([',', ':', '=']).collect::<Vec<_>>();
+        if parts.len() != 2 {
+            println!("[-] WARN: Error parsing tag `{}` in `{}`", raw.trim(), path);
+        }
+
+        let val = parts[1].trim();
+        match parts[0].to_lowercase().trim() {
+            "name" => name = Some(val.to_owned()),
+            "lang" | "languge" => {
+                tags.lang = Some(match val {
+                    "java" => Languge::Java,
+                    "python" => Languge::Python,
+                    _ => panic!("Unknown languge `{}`", val),
+                })
+            }
+            "section" => tags.section = Some(val.to_owned()),
+            "show_cases" => tags.show_cases = Some(val.parse().unwrap()),
+            _ => {
+                println!("[-] WARN: Unknown tag `{}` in `{}`", parts[0], path);
+            }
+        }
+    }
+
+    name.expect("Required field `name` not defined")
 }
