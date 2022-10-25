@@ -10,6 +10,7 @@ use afire::{
 mod api;
 mod app;
 mod config;
+mod r#const;
 mod problem;
 use app::App;
 

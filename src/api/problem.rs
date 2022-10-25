@@ -1,4 +1,4 @@
-use afire::{Method, Response, Server};
+use afire::{Content, Method, Response, Server};
 use serde_json::json;
 
 use crate::{problem::Languge, App};
@@ -21,15 +21,17 @@ pub fn attach(server: &mut Server<App>) {
             .take(problem.tags.show_cases.unwrap_or(4))
             .collect::<Vec<_>>();
 
-        Response::new().text(json!({
-            "name": problem.name,
-            "text": problem.document,
-            "hint": problem.hint,
-            "baseCode": problem.base_code,
-            "cases": pub_cases,
-            "moreCases": problem.cases.len() > pub_cases.len(),
-            "lang": problem.tags.lang.unwrap_or(Languge::Java),
-            "section": problem.tags.section
-        }))
+        Response::new()
+            .text(json!({
+                "name": problem.name,
+                "text": problem.document,
+                "hint": problem.hint,
+                "baseCode": problem.base_code,
+                "cases": pub_cases,
+                "moreCases": problem.cases.len() > pub_cases.len(),
+                "lang": problem.tags.lang.unwrap_or(Languge::Java),
+                "section": problem.tags.section
+            }))
+            .content(Content::JSON)
     });
 }

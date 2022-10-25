@@ -15,7 +15,7 @@ pub struct Config {
     pub tmp_folder: String,
 
     pub req_duration: Duration,
-    pub problems_path: String
+    pub problems_path: String,
 }
 
 impl Config {
@@ -32,7 +32,7 @@ impl Config {
             tmp_folder: get_config(&cfg, "tmp_folder"),
 
             req_duration: Duration::from_secs(get_config(&cfg, "req_duration")),
-            problems_path: get_config(&cfg, "problems_path")
+            problems_path: get_config(&cfg, "problems_path"),
         }
     }
 }

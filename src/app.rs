@@ -1,7 +1,7 @@
+use std::collections::HashMap;
 use std::fs;
-use std::{borrow::Cow, collections::HashMap};
 
-use parking_lot::{Mutex, RwLock};
+use parking_lot::Mutex;
 use rusqlite::Connection;
 
 use crate::{config::Config, problem::Problem};
@@ -32,7 +32,7 @@ impl App {
             let name = i.file_name().to_string_lossy().to_string();
             let raw = fs::read_to_string(i.path()).unwrap();
             problems.insert(
-                name.rsplit_once(".").unwrap().0.to_owned(),
+                name.rsplit_once('.').unwrap().0.to_owned(),
                 Problem::load(raw, &name),
             );
         }

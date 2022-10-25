@@ -104,7 +104,7 @@ impl Type {
         raw = raw.trim();
 
         // String
-        if let Some(i) = raw.strip_prefix("\"").and_then(|x| x.strip_suffix("\"")) {
+        if let Some(i) = raw.strip_prefix('"').and_then(|x| x.strip_suffix('"')) {
             return Some(Type::String(i.to_owned()));
         }
 
@@ -124,16 +124,26 @@ impl Type {
         }
 
         // Arrays
-        if let Some(i) = raw.strip_prefix("{").and_then(|x| x.strip_suffix("}")) {
+        if let Some(i) = raw.strip_prefix('{').and_then(|x| x.strip_suffix('}')) {
             return Some(Type::Array(parse_case_input(i), false));
         }
 
         // Array Lists
-        if let Some(i) = raw.strip_prefix("[").and_then(|x| x.strip_suffix("]")) {
+        if let Some(i) = raw.strip_prefix('[').and_then(|x| x.strip_suffix(']')) {
             return Some(Type::Array(parse_case_input(i), true));
         }
 
         None
+    }
+}
+
+impl Languge {
+    pub fn runner(&self) -> String {
+        match self {
+            Languge::Java => "java",
+            Languge::Python => "python",
+        }
+        .to_string()
     }
 }
 
