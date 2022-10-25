@@ -6,7 +6,7 @@ use afire::{Content, Method, Response, Server};
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::problem::Languge;
+use crate::problem::Language;
 use crate::r#const::LANGS;
 use crate::App;
 
@@ -30,7 +30,7 @@ pub fn attach(server: &mut Server<App>) {
 
         // Get languge
         let language = LANGS
-            .get(&problem.tags.lang.unwrap_or(Languge::Java).runner())
+            .get(&problem.tags.lang.unwrap_or(Language::Java).runner())
             .unwrap();
 
         // Write code to disk

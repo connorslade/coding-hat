@@ -4,7 +4,7 @@ use serde::Serialize;
 
 lazy_static! {
     static ref COMRAK_OPTIONS: ComrakOptions = {
-        let mut opt = comrak::ComrakOptions::default();
+        let mut opt = ComrakOptions::default();
         opt.extension.table = true;
         opt.extension.strikethrough = true;
         opt.extension.autolink = true;
@@ -51,7 +51,7 @@ pub enum Type {
 #[derive(Debug, Default)]
 pub struct Tags {
     /// The languge used for the problem
-    pub lang: Option<Languge>,
+    pub lang: Option<Language>,
     /// The name of the section the problem is in
     pub section: Option<String>,
     /// The numbber of cases to show the user
@@ -59,7 +59,7 @@ pub struct Tags {
 }
 
 #[derive(Debug, Clone, Copy, Serialize)]
-pub enum Languge {
+pub enum Language {
     Python,
     Java,
 }
@@ -137,11 +137,11 @@ impl Type {
     }
 }
 
-impl Languge {
+impl Language {
     pub fn runner(&self) -> String {
         match self {
-            Languge::Java => "java",
-            Languge::Python => "python",
+            Language::Java => "java",
+            Language::Python => "python",
         }
         .to_string()
     }
@@ -290,11 +290,11 @@ fn parse_meta(tags: &mut Tags, raw: &str, path: &str) -> String {
         let val = parts[1].trim();
         match parts[0].to_lowercase().trim() {
             "name" => name = Some(val.to_owned()),
-            "lang" | "languge" => {
+            "lang" | "language" => {
                 tags.lang = Some(match val {
-                    "java" => Languge::Java,
-                    "python" => Languge::Python,
-                    _ => panic!("Unknown languge `{}`", val),
+                    "java" => Language::Java,
+                    "python" => Language::Python,
+                    _ => panic!("Unknown language `{}`", val),
                 })
             }
             "section" => tags.section = Some(val.to_owned()),

@@ -1,7 +1,7 @@
 use afire::{Content, Method, Response, Server};
 use serde_json::json;
 
-use crate::{problem::Languge, App};
+use crate::{problem::Language, App};
 
 pub fn attach(server: &mut Server<App>) {
     server.stateful_route(Method::GET, "/api/problem/{id}", |app, req| {
@@ -29,7 +29,7 @@ pub fn attach(server: &mut Server<App>) {
                 "baseCode": problem.base_code,
                 "cases": pub_cases,
                 "moreCases": problem.cases.len() > pub_cases.len(),
-                "lang": problem.tags.lang.unwrap_or(Languge::Java),
+                "lang": problem.tags.lang.unwrap_or(Language::Java),
                 "section": problem.tags.section
             }))
             .content(Content::JSON)
