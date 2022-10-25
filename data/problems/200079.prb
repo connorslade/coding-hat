@@ -1,3 +1,6 @@
+# NAME
+    Cat Counting
+
 # DOCUMENT
     Write a function findCats(phrase) that counts the number of occurrences of "cat" in a string.
     For example, findCats("concatenate") returns 1 because "cat" occurs 1 time.

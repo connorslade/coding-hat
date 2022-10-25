@@ -25,11 +25,16 @@ impl App {
         for i in fs::read_dir(&config.problems_path)
             .unwrap()
             .map(|x| x.unwrap())
-            .filter(|x| x.path().is_file())
+            .filter(|x| {
+                x.path().is_file() && x.path().extension().and_then(|x| x.to_str()) == Some("prb")
+            })
         {
             let name = i.file_name().to_string_lossy().to_string();
             let raw = fs::read_to_string(i.path()).unwrap();
-            problems.insert(name.to_owned(), Problem::load(raw, &name));
+            problems.insert(
+                name.rsplit_once(".").unwrap().0.to_owned(),
+                Problem::load(raw, &name),
+            );
         }
 
         println!(

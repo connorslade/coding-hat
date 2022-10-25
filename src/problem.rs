@@ -1,5 +1,6 @@
 use comrak::{markdown_to_html, ComrakOptions};
 use lazy_static::lazy_static;
+use serde::Serialize;
 
 lazy_static! {
     static ref COMRAK_OPTIONS: ComrakOptions = {
@@ -17,6 +18,7 @@ lazy_static! {
 
 #[derive(Debug)]
 pub struct Problem {
+    pub name: String,
     pub document: String,
     pub hint: String,
     pub code: String,
@@ -24,13 +26,11 @@ pub struct Problem {
     pub tags: Vec<Tag>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Case(Vec<Type>, Type);
 
-#[derive(Debug)]
-pub struct Tag(TagType, String);
-
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
 pub enum Type {
     Int(i64),
     Float(f64),
@@ -41,22 +41,31 @@ pub enum Type {
 }
 
 #[derive(Debug)]
-pub enum TagType {
-    Languge,
-    Section,
+pub enum Tag {
+    Languge(Languge),
+    Section(String),
+    ShowCases(usize),
+}
+
+#[derive(Debug, Clone, Copy, Serialize)]
+pub enum Languge {
+    Python,
+    Java,
 }
 
 impl Problem {
     pub fn load(raw: String, path: &str) -> Self {
+        let mut name = String::new();
         let mut document = String::new();
         let mut hint = String::new();
         let mut code = String::new();
         let mut cases = Vec::new();
         let mut tags = Vec::new();
 
-        for (name, content) in get_sections(&raw) {
+        for (section, content) in get_sections(&raw) {
             let content = un_indent(&content);
-            match name.to_uppercase().as_str() {
+            match section.to_uppercase().as_str() {
+                "NAME" => name = content,
                 "DOCUMENT" => document = markdown_to_html(&content, &COMRAK_OPTIONS),
                 "HINT" => hint = markdown_to_html(&content, &COMRAK_OPTIONS),
                 "CODE" => code = content,
@@ -67,17 +76,43 @@ impl Problem {
                         .filter_map(|x| Tag::parse(x, path))
                         .collect()
                 }
-                _ => println!("[-] WARN: Unknown section `{}` in `{}`", name, path),
+                _ => println!("[-] WARN: Unknown section `{}` in `{}`", section, path),
             }
         }
 
         Self {
+            name,
             document,
             hint,
             code,
             cases,
             tags,
         }
+    }
+
+    pub fn public_cases(&self) -> Vec<Case> {
+        let count = self
+            .tags
+            .iter()
+            .find(|x| matches!(x, Tag::ShowCases(_)))
+            .map(|x| match x {
+                Tag::ShowCases(i) => i,
+                _ => unreachable!(),
+            })
+            .unwrap_or(&4);
+        self.cases.iter().take(*count).cloned().collect()
+    }
+
+    pub fn lang(&self) -> Languge {
+        *self
+            .tags
+            .iter()
+            .find(|x| matches!(x, Tag::Languge(_)))
+            .map(|x| match x {
+                Tag::Languge(x) => x,
+                _ => unreachable!(),
+            })
+            .unwrap_or(&Languge::Python)
     }
 }
 
@@ -89,16 +124,21 @@ impl Tag {
             return None;
         }
 
+        let val = parts[1].trim();
         let key = match parts[0].to_lowercase().trim() {
-            "lang" | "languge" => TagType::Languge,
-            "section" => TagType::Section,
+            "lang" | "languge" => Tag::Languge(match val {
+                "java" => Languge::Java,
+                "python" => Languge::Python,
+                _ => panic!("Unknown languge `{}`", val),
+            }),
+            "section" => Tag::Section(val.to_owned()),
             _ => {
                 println!("[-] WARN: Unknown tag `{}` in `{}`", parts[0], path);
                 return None;
             }
         };
 
-        Some(Self(key, parts[1].trim().to_owned()))
+        Some(key)
     }
 }
 
