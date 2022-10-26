@@ -2,3 +2,8 @@ target
 web/dist
 data/tmp
 data.*db
+
+# Java Build stuff
+.idea
+out
+langs.iml
