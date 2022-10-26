@@ -1,4 +1,6 @@
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,8 +20,26 @@ class Main {
             Object correctOutput = _case.remove(cases.size());
             Object instance = Solution.class.getDeclaredConstructor()
                     .newInstance();
-            Object output = Solution.class.getMethods()[0]
-                    .invoke(instance, _case.toArray());
+
+            Optional<Method> runFun = Arrays.stream(Solution.class.getMethods())
+                    .filter(m -> m.getName()
+                            .equals(funcName))
+                    .findFirst();
+
+            if (runFun.isEmpty()) {
+                System.out.printf("%s;ERROR;FUNC_DEF_NOT_FOUND", sharedToken);
+                break;
+            }
+
+            Object output;
+            try {
+                output = runFun
+                        .get()
+                        .invoke(instance, _case.toArray());
+            } catch (IllegalArgumentException ignored) {
+                System.out.printf("%s;ERROR;INVALID_FUNC_SIG", sharedToken);
+                break;
+            }
 
             System.out.print("Case #" + i++ + " (" + output.equals(correctOutput) + ") | ");
             System.out.println(output);
