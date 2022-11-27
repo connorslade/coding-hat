@@ -3,10 +3,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 class Main {
     public static void main(String[] args) throws Exception {
-        String raw = "j2h5hd;ggm;2,\"egg\">\"egg egg\";3,\"cool\">\"cool cool cool\"";
+        String raw = urlDecode(System.getenv("DATA"));
+        // TODO: clear DATA env var
 
         String[] data = raw.split(";");
         String sharedToken = data[0];
@@ -17,7 +21,7 @@ class Main {
 
         int i = 0;
         for (List<Object> _case : cases) {
-            Object correctOutput = _case.remove(cases.size());
+            Object correctOutput = _case.remove(_case.size() - 1);
             Object instance = Solution.class.getDeclaredConstructor()
                     .newInstance();
 
@@ -90,6 +94,7 @@ class Main {
         if (!working.isEmpty()) {
             out.add(parseType(working.toString()).orElseThrow());
         }
+        
         return out;
     }
 
@@ -123,5 +128,13 @@ class Main {
         // List
 
         return Optional.empty();
+    }
+
+    static String urlDecode(String value) {
+        try {
+            return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
     }
 }

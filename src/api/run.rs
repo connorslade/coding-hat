@@ -3,6 +3,7 @@ use std::process::{Command, Stdio};
 use std::time::Instant;
 
 use afire::{Content, Method, Response, Server};
+use rand::Rng;
 use serde::Deserialize;
 use serde_json::json;
 
@@ -40,6 +41,21 @@ pub fn attach(server: &mut Server<App>) {
             .write_all(info.run_file(&data.code).as_bytes())
             .unwrap();
 
+        // Data
+        // [6-digit code];[func name];i,i,i>o;i,i,i>o
+        let shared_token = rand::thread_rng()
+            .sample_iter(&rand::distributions::Alphanumeric)
+            .take(6)
+            .map(|x| x as char)
+            .collect::<String>();
+        let data = format!(
+            "{};{};{}",
+            shared_token,
+            problem.func_name,
+            problem.stringify()
+        );
+        println!("{}", data);
+
         // Build and run in a docker container
         let time = Instant::now();
         let run = Command::new(&app.config.docker_command)
@@ -65,7 +81,7 @@ pub fn attach(server: &mut Server<App>) {
                 "-e",
                 &format!("TIMEOUT={}", &app.config.docker_timeout),
                 "-e",
-                &format!("DATA={}", urlencoding::encode("TODO")),
+                &format!("DATA={}", urlencoding::encode(&data)),
                 &language.image_name,
             ])
             .stdout(Stdio::piped())
@@ -79,6 +95,7 @@ pub fn attach(server: &mut Server<App>) {
         // Send response
         let out = String::from_utf8_lossy(&run.stdout);
         let err = String::from_utf8_lossy(&run.stderr);
+        println!("\n{err}");
 
         Response::new()
             .text(json!({

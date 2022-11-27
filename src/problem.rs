@@ -1,8 +1,11 @@
 use comrak::{markdown_to_html, ComrakOptions};
 use lazy_static::lazy_static;
+use regex::Regex;
 use serde::Serialize;
 
 lazy_static! {
+    static ref JAVA_FUNC_REGEX: Regex = Regex::new("public (static )?.* (.*)\\(.*").unwrap();
+    static ref PYTHON_FUNC_REGEX: Regex = Regex::new("def (.*)\\(.*\\):").unwrap();
     static ref COMRAK_OPTIONS: ComrakOptions = {
         let mut opt = ComrakOptions::default();
         opt.extension.table = true;
@@ -28,6 +31,8 @@ pub struct Problem {
     pub base_code: String,
     /// Working example code
     pub code: String,
+    /// The name of the fuction to run
+    pub func_name: String,
     /// Test cases
     pub cases: Vec<Case>,
     /// Optinal meta info
@@ -87,15 +92,36 @@ impl Problem {
             }
         }
 
+        let func_name = parse_func_name(tags.lang.unwrap_or(Language::Java), &base_code)
+            .unwrap_or_else(|| panic!("Error parsing function name for `{}`", path));
+
         Self {
             name,
             document,
             hint,
             base_code,
+            func_name,
             code,
             cases,
             tags,
         }
+    }
+
+    pub fn stringify(&self) -> String {
+        let mut out = Vec::new();
+
+        for i in &self.cases {
+            out.push(format!(
+                "{}>{}",
+                i.0.iter()
+                    .map(|x| x.as_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
+                i.1.as_string()
+            ));
+        }
+
+        out.join(";")
     }
 }
 
@@ -134,6 +160,24 @@ impl Type {
         }
 
         None
+    }
+
+    fn as_string(&self) -> String {
+        fn array_string(i: &Vec<Type>) -> String {
+            i.iter()
+                .map(|x| x.as_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        }
+
+        match self {
+            Type::String(i) => format!("\"{i}\""),
+            Type::Bool(i) => i.to_string(),
+            Type::Float(i) => i.to_string(),
+            Type::Int(i) => i.to_string(),
+            Type::Array(i, true) => format!("{{{}}}", array_string(i)),
+            Type::Array(i, false) => format!("[{}]", array_string(i)),
+        }
     }
 }
 
@@ -306,4 +350,17 @@ fn parse_meta(tags: &mut Tags, raw: &str, path: &str) -> String {
     }
 
     name.expect("Required field `name` not defined")
+}
+
+fn parse_func_name(lang: Language, base_code: &str) -> Option<String> {
+    match lang {
+        Language::Java => {
+            let captures = JAVA_FUNC_REGEX.captures(base_code)?;
+            Some(captures.get(2)?.as_str().to_owned())
+        }
+        Language::Python => {
+            let captures = PYTHON_FUNC_REGEX.captures(base_code)?;
+            Some(captures.get(1)?.as_str().to_owned())
+        }
+    }
 }
