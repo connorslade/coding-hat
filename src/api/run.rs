@@ -7,7 +7,7 @@ use rand::Rng;
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::problem::Language;
+use crate::problem::{Language, Problem};
 use crate::r#const::LANGS;
 use crate::{langs, App};
 
@@ -54,7 +54,6 @@ pub fn attach(server: &mut Server<App>) {
             problem.func_name,
             problem.stringify()
         );
-        println!("{}", data);
 
         // Build and run in a docker container
         let time = Instant::now();
@@ -92,10 +91,12 @@ pub fn attach(server: &mut Server<App>) {
             .unwrap();
         let time = time.elapsed().as_millis() as u64;
 
-        // Send response
+        // Get outputs
         let out = String::from_utf8_lossy(&run.stdout);
         let err = String::from_utf8_lossy(&run.stderr);
-        println!("\n{err}");
+
+        // Parse output
+        let output = parse_output(&problem, &shared_token, &err);
 
         Response::new()
             .text(json!({
@@ -105,4 +106,76 @@ pub fn attach(server: &mut Server<App>) {
             }))
             .content(Content::JSON)
     });
+}
+
+/// Vector of length problems with the value being the value
+/// being the user's program output.
+type RunCases = Vec<String>;
+
+enum RunOutput {
+    /// Program ran successfully and tests passed
+    Success(RunCases),
+
+    /// Program ran successfully but some tests failed    
+    Fail(RunCases),
+
+    /// Program failed to run
+    Error(ErrorKind),
+}
+
+enum ErrorKind {
+    /// Function not found
+    FunctionDefNotFound,
+    /// Invalid function signature
+    InvalidFuncSig,
+}
+
+/// -> (RunOutput, [clean stderr])
+fn parse_output(problem: &Problem, token: &str, std_err: &str) -> (RunOutput, String) {
+    let mut cleaned = Vec::new();
+    let mut force_error = None;
+    let mut run_cases = vec![(false, String::new()); problem.cases.len()];
+    let prefix = format!("{};", token);
+
+    for i in std_err.lines() {
+        if let Some(j) = i.strip_prefix(&prefix) {
+            let mut parts = j.splitn(2, ';');
+            let msg_type = parts.next().unwrap();
+            let data = parts.next().unwrap();
+
+            match msg_type {
+                "ERROR" if force_error.is_none() => match data {
+                    "FUNC_DEF_NOT_FOUND" => {
+                        force_error = Some(RunOutput::Error(ErrorKind::FunctionDefNotFound))
+                    }
+                    "INVALID_FUNC_SIG" => {
+                        force_error = Some(RunOutput::Error(ErrorKind::InvalidFuncSig))
+                    }
+                    _ => panic!("Unknown error type: {}", data),
+                },
+                "RESULT" => {
+                    let mut parts = data.split(';');
+                    for i in 0..problem.cases.len() {
+                        let part = parts.next().unwrap();
+                        match part {
+                            "P" => run_cases[i].0 = true,
+                            "F" => run_cases[i].0 = false,
+                            _ => panic!("Invalid result state: {}", part),
+                        }
+                    }
+
+                    for i in 0..problem.cases.len() {
+                        run_cases[i].1 = parts.next().unwrap().to_string();
+                    }
+                }
+                _ => panic!("Unknown message type: {}", msg_type),
+            }
+
+            continue;
+        }
+
+        cleaned.push(i);
+    }
+
+    todo!()
 }
