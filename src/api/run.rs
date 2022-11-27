@@ -8,7 +8,7 @@ use serde_json::json;
 
 use crate::problem::Language;
 use crate::r#const::LANGS;
-use crate::App;
+use crate::{langs, App};
 
 #[derive(Deserialize)]
 struct RouteData {
@@ -32,10 +32,13 @@ pub fn attach(server: &mut Server<App>) {
         let language = LANGS
             .get(&problem.tags.lang.unwrap_or(Language::Java).runner())
             .unwrap();
+        let info = &langs::LANGS[language.info_index];
 
         // Write code to disk
         let mut code_file = tempfile::NamedTempFile::new_in(&app.config.tmp_folder).unwrap();
-        code_file.write_all(data.code.as_bytes()).unwrap();
+        code_file
+            .write_all(info.run_file(&data.code).as_bytes())
+            .unwrap();
 
         // Build and run in a docker container
         let time = Instant::now();
@@ -57,13 +60,13 @@ pub fn attach(server: &mut Server<App>) {
                 &format!(
                     "{}:/runner/{}",
                     code_file.path().to_string_lossy(),
-                    language.1
+                    language.source_path
                 ),
                 "-e",
                 &format!("TIMEOUT={}", &app.config.docker_timeout),
                 "-e",
                 &format!("DATA={}", urlencoding::encode("TODO")),
-                &language.0,
+                &language.image_name,
             ])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

@@ -11,6 +11,7 @@ mod api;
 mod app;
 mod config;
 mod r#const;
+mod langs;
 mod problem;
 use app::App;
 
@@ -20,6 +21,7 @@ fn main() {
         println!("[-] Web dist not built!");
         return;
     }
+    r#const::init();
 
     // Create App
     let app = App::new();
