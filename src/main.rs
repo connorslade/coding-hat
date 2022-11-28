@@ -9,9 +9,11 @@ use afire::{
 
 mod api;
 mod app;
+mod auth;
 mod config;
 mod r#const;
 mod langs;
+mod misc;
 mod problem;
 use app::App;
 
@@ -33,6 +35,7 @@ fn main() {
     ServeStatic::new("web/dist").attach(&mut server);
     Logger::new().attach(&mut server);
     api::attach(&mut server);
+    auth::attach(&mut server);
 
     // Setup Exit Handler
     let error_app = server.state.as_ref().unwrap().clone();

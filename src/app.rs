@@ -11,6 +11,9 @@ pub struct App {
     pub config: Config,
     /// Database
     pub db: Mutex<Connection>,
+    // Oauth states (state, epoch)
+    // TODO: garbage collect
+    pub oauth_states: Mutex<Vec<(String, u64)>>,
 
     /// Problem Map
     /// ID -> PROBLEM
@@ -45,6 +48,7 @@ impl App {
 
         App {
             db: Mutex::new(Connection::open(&config.database).unwrap()),
+            oauth_states: Mutex::new(Vec::new()),
             problems,
             config,
         }
