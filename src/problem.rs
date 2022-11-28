@@ -163,7 +163,7 @@ impl Type {
     }
 
     fn as_string(&self) -> String {
-        fn array_string(i: &Vec<Type>) -> String {
+        fn array_string(i: &[Type]) -> String {
             i.iter()
                 .map(|x| x.as_string())
                 .collect::<Vec<_>>()

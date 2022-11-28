@@ -4,7 +4,7 @@ use std::time::Instant;
 
 use afire::{Content, Method, Response, Server};
 use rand::Rng;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::problem::{Language, Problem};
@@ -96,13 +96,17 @@ pub fn attach(server: &mut Server<App>) {
         let err = String::from_utf8_lossy(&run.stderr);
 
         // Parse output
-        let output = parse_output(&problem, &shared_token, &err);
+        let (output, clean_out) = parse_output(problem, &shared_token, &err);
+        dbg!(&output, &clean_out);
 
+        // TODO: maybe only send results of the shown test cases
+        // also denote which test cases have passed
         Response::new()
             .text(json!({
-                "stdout": out,
-                "stderr": err,
-                "time": time
+                "stdout": !out.is_empty(),
+                "stderr": clean_out,
+                "time": time,
+                "result": output,
             }))
             .content(Content::JSON)
     });
@@ -112,17 +116,19 @@ pub fn attach(server: &mut Server<App>) {
 /// being the user's program output.
 type RunCases = Vec<String>;
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "lowercase", tag = "type", content = "data")]
 enum RunOutput {
     /// Program ran successfully and tests passed
     Success(RunCases),
-
     /// Program ran successfully but some tests failed    
     Fail(RunCases),
-
     /// Program failed to run
     Error(ErrorKind),
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
 enum ErrorKind {
     /// Function not found
     FunctionDefNotFound,
@@ -134,48 +140,61 @@ enum ErrorKind {
 fn parse_output(problem: &Problem, token: &str, std_err: &str) -> (RunOutput, String) {
     let mut cleaned = Vec::new();
     let mut force_error = None;
-    let mut run_cases = vec![(false, String::new()); problem.cases.len()];
+    let mut run_cases = Vec::with_capacity(problem.cases.len());
     let prefix = format!("{};", token);
 
     for i in std_err.lines() {
         if let Some(j) = i.strip_prefix(&prefix) {
-            let mut parts = j.splitn(2, ';');
-            let msg_type = parts.next().unwrap();
-            let data = parts.next().unwrap();
+            if force_error.is_some() {
+                continue;
+            }
 
-            match msg_type {
-                "ERROR" if force_error.is_none() => match data {
+            let parts = j.split_once(';').unwrap();
+            match parts.0 {
+                "ERROR" => match parts.1 {
                     "FUNC_DEF_NOT_FOUND" => {
                         force_error = Some(RunOutput::Error(ErrorKind::FunctionDefNotFound))
                     }
                     "INVALID_FUNC_SIG" => {
                         force_error = Some(RunOutput::Error(ErrorKind::InvalidFuncSig))
                     }
-                    _ => panic!("Unknown error type: {}", data),
+                    _ => panic!("Unknown error type: {}", parts.1),
                 },
                 "RESULT" => {
-                    let mut parts = data.split(';');
-                    for i in 0..problem.cases.len() {
-                        let part = parts.next().unwrap();
-                        match part {
-                            "P" => run_cases[i].0 = true,
-                            "F" => run_cases[i].0 = false,
-                            _ => panic!("Invalid result state: {}", part),
-                        }
-                    }
+                    let parts = parts.1.split(';').collect::<Vec<_>>();
+                    debug_assert!(parts.len() == problem.cases.len() * 2);
 
                     for i in 0..problem.cases.len() {
-                        run_cases[i].1 = parts.next().unwrap().to_string();
+                        let result = parts[i + problem.cases.len()];
+                        let status = match parts[i] {
+                            "P" => true,
+                            "F" => false,
+                            _ => panic!("Invalid result state: {}", parts[i]),
+                        };
+
+                        run_cases.push((result.to_string(), status));
                     }
                 }
-                _ => panic!("Unknown message type: {}", msg_type),
+                _ => panic!("Unknown message type: {}", parts.0),
             }
-
             continue;
         }
 
         cleaned.push(i);
     }
 
-    todo!()
+    if let Some(i) = force_error {
+        return (i, cleaned.join("\n"));
+    }
+
+    let all_success = run_cases.iter().all(|(_, i)| *i);
+    let output = run_cases.into_iter().map(|(i, _)| i).collect();
+
+    (
+        match all_success {
+            true => RunOutput::Success(output),
+            false => RunOutput::Fail(output),
+        },
+        cleaned.join("\n"),
+    )
 }

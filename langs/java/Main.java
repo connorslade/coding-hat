@@ -31,7 +31,7 @@ class Main {
                     .findFirst();
 
             if (runFun.isEmpty()) {
-                System.err.printf("%s;ERROR;FUNC_DEF_NOT_FOUND", sharedToken);
+                System.err.printf("%s;ERROR;FUNC_DEF_NOT_FOUND\n", sharedToken);
                 break;
             }
 
@@ -41,7 +41,7 @@ class Main {
                         .get()
                         .invoke(instance, _case.toArray());
             } catch (IllegalArgumentException ignored) {
-                System.err.printf("%s;ERROR;INVALID_FUNC_SIG", sharedToken);
+                System.err.printf("%s;ERROR;INVALID_FUNC_SIG\n", sharedToken);
                 break;
             }
 
