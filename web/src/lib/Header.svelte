@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Login, Logout } from "svelte-hero-icons";
+  import { ArrowRightOnRectangle, ArrowLeftOnRectangle } from "svelte-heros-v2";
   import { router } from "tinro";
   import favicon from "../assets/favicon-32x32.png";
   import { state } from "../state";
@@ -33,8 +33,8 @@
   {/each}
 
   {#if !state}
-    <Icon
-      src={Login}
+    <ArrowLeftOnRectangle
+      size="36"
       name="log-in"
       title="Log In"
       class="log ml-auto cursor-pointer bg-slate-800 hover:bg-slate-700 rounded m-1.5 inline-block"
@@ -54,8 +54,8 @@
         on:click={() => router.goto(`/profile/${state.id}`)}
       />
 
-      <Icon
-        src={Logout}
+      <ArrowRightOnRectangle
+        size="36"
         name="log-out"
         title="Log Out"
         class="log cursor-pointer bg-slate-800 hover:bg-slate-700 rounded"
