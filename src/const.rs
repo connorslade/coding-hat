@@ -12,6 +12,9 @@ pub struct LangInfo {
     pub info_index: usize,
 }
 
+// defult ~1 month
+pub const VALID_SESSION_LENGTH: u64 = 60 * 60 * 24 * 30;
+
 lazy_static! {
     pub static ref LANGS: HashMap<String, LangInfo> = {
         let raw_langs: Value = from_str(&fs::read_to_string("langs/languages.json").unwrap())
