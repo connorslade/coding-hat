@@ -2,6 +2,7 @@ target
 web/dist
 data/tmp
 data.db*
+old-web
 
 # Java Build stuff
 .idea
