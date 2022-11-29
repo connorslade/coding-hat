@@ -12,7 +12,6 @@ mod app;
 mod auth;
 mod config;
 mod r#const;
-mod database;
 mod langs;
 mod misc;
 mod problem;

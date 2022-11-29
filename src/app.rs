@@ -25,6 +25,7 @@ impl App {
         let config = Config::load("./data/config.cfg");
         let mut problems = HashMap::new();
 
+        // Load problems
         for i in fs::read_dir(&config.problems_path)
             .unwrap()
             .map(|x| x.unwrap())
@@ -46,8 +47,24 @@ impl App {
             if problems.len() == 1 { "" } else { "s" }
         );
 
+        // Open DB
+        let mut conn = Connection::open(&config.database).unwrap();
+        conn.pragma_update(None, "journal_mode", "WAL").unwrap();
+        conn.pragma_update(None, "synchronous", "NORMAL").unwrap();
+
+        let trans = conn.transaction().unwrap();
+        for i in [
+            include_str!("./sql/create_attempts.sql"),
+            include_str!("./sql/create_sessions.sql"),
+            include_str!("./sql/create_solutions.sql"),
+            include_str!("./sql/create_users.sql"),
+        ] {
+            trans.execute(i, []).unwrap();
+        }
+        trans.commit().unwrap();
+
         App {
-            db: Mutex::new(Connection::open(&config.database).unwrap()),
+            db: Mutex::new(conn),
             oauth_states: Mutex::new(Vec::new()),
             problems,
             config,

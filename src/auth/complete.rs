@@ -4,6 +4,7 @@ use crate::{misc::json_err, App};
 
 use afire::{Method, Response, Server, SetCookie};
 use rand::Rng;
+use rusqlite::params;
 use serde_json::Value;
 
 pub fn attach(server: &mut Server<App>) {
@@ -59,15 +60,15 @@ pub fn attach(server: &mut Server<App>) {
 
         // Parse Response and net Token
         let token = serde_json::from_reader::<_, Value>(resp).unwrap();
-        let token = token
+        let access_token = token
             .get("access_token")
             .and_then(|x| x.as_str())
             .expect("No Access Token!?");
 
-        // https://www.googleapis.com/oauth2/v1/userinfo?access_token=<TOKEN>
         // Get User Info
         let user_raw = ureq::get("https://www.googleapis.com/oauth2/v1/userinfo")
-            .set("Authorization", &format!("Bearer {}", token))
+            .set("Authorization", &format!("Bearer {}", access_token))
+            .timeout(app.config.req_duration)
             .call()
             .unwrap()
             .into_reader();
@@ -82,36 +83,28 @@ pub fn attach(server: &mut Server<App>) {
             .expect("No Picture");
 
         dbg!(id, name, picture);
+        app.db
+            .lock()
+            .execute(
+                include_str!("../sql/upsert_login.sql"),
+                params![id, name, picture, access_token],
+            )
+            .unwrap();
 
-        // TODO: Add to / Update database
-        // app.db
-        //     .lock()
-        //     .execute(
-        //         include_str!("../sql/upsert_login.sql"),
-        //         params![
-        //             id,
-        //             name,
-        //             user.get("avatar_url").unwrap().as_str().unwrap(),
-        //             token,
-        //             login
-        //         ],
-        //     )
-        //     .unwrap();
-
-        // TODO: Make a new session
+        // TODO: Garbage collect sessions?
         let session_token = rand::thread_rng()
             .sample_iter(&rand::distributions::Alphanumeric)
             .take(15)
             .map(|x| x as char)
             .collect::<String>();
 
-        // app.db
-        //     .lock()
-        //     .execute(
-        //         "INSERT INTO sessions (created, user_id, session_id) VALUES (?, ?, ?)",
-        //         params![current_epoch(), id, session_token],
-        //     )
-        //     .unwrap();
+        app.db
+            .lock()
+            .execute(
+                "INSERT INTO sessions (created, user_id, session_id) VALUES (?, ?, ?)",
+                params![epoch, id, session_token],
+            )
+            .unwrap();
 
         let cookie = SetCookie::new("session", session_token)
             .path("/")
