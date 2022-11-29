@@ -4,7 +4,10 @@
   import favicon from "../assets/favicon-32x32.png";
   import { state } from "../state";
 
-  export let page;
+  export let page = null;
+
+  let user = null;
+  state.getUser().then((u) => (user = u));
 </script>
 
 <nav
@@ -32,26 +35,26 @@
     </div>
   {/each}
 
-  {#if !state}
+  {#if !user}
     <ArrowLeftOnRectangle
       size="36"
       name="log-in"
       title="Log In"
       class="log ml-auto cursor-pointer bg-slate-800 hover:bg-slate-700 rounded m-1.5 inline-block"
-      on:click={() => router.goto("/auth/redirect")}
+      on:click={() => (location.pathname = "/auth/redirect")}
     />
   {:else}
     <div class="ml-auto flex mr-1.5">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <img
-        src={state.avatar}
+        src={user.avatar}
         width="36px"
         height="auto"
         title="Your Profile"
         alt="icon"
         referrerpolicy="no-referrer"
         class="cursor-pointer bg-slate-800 hover:bg-slate-700 rounded mr-1.5"
-        on:click={() => router.goto(`/profile/${state.id}`)}
+        on:click={() => router.goto(`/profile/${user.id}`)}
       />
 
       <ArrowRightOnRectangle
@@ -59,7 +62,7 @@
         name="log-out"
         title="Log Out"
         class="log cursor-pointer bg-slate-800 hover:bg-slate-700 rounded"
-        on:click={() => router.goto("/auth/logout")}
+        on:click={() => (location.pathname = "/auth/logout")}
       />
     </div>
   {/if}
