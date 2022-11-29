@@ -4,7 +4,7 @@ use std::process;
 
 use afire::{
     extension::{Logger, ServeStatic},
-    Middleware, Server,
+    Content, Middleware, Response, Server,
 };
 
 mod api;
@@ -32,7 +32,13 @@ fn main() {
 
     // Init Server
     let mut server = Server::<App>::new(&app.config.host, app.config.port).state(app);
-    ServeStatic::new("web/dist").attach(&mut server);
+    ServeStatic::new("web/dist")
+        .not_found(|_req, _dis| {
+            Response::new()
+                .bytes(fs::read("web/dist/index.html").expect("Webpage not built"))
+                .content(Content::HTML)
+        })
+        .attach(&mut server);
     Logger::new().attach(&mut server);
     api::attach(&mut server);
     auth::attach(&mut server);

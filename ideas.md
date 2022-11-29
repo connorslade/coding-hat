@@ -1,4 +1,6 @@
 - [ ] Disallow printing to std(out|err) with a tag
-- [X] Google oauth
+- [x] Google oauth
 - [ ] Auto save code (check if content has changed every 10 seconds) or maybye dont because it could overwrite code
 - [ ] Projects where you can add link to multiple problems with an amplify inspired UI
+- [ ] Use own user ids for /profile page
+- [ ] Proxy profile images
