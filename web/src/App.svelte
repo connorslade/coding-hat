@@ -1,17 +1,11 @@
 <script>
   // @ts-nocheck
   import { Route } from "tinro";
+  import NotFound from "./NotFound.svelte";
+  import Home from "./pages/Home.svelte";
 </script>
 
 <main>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/portfolio">Portfolio</a>
-    <a href="/contacts">Contacts</a>
-  </nav>
-
-  <Route path="/">
-    <h1>This is the main page</h1>
-  </Route>
-  <Route fallback>Page not found!?</Route>
+  <Route path="/"><Home /></Route>
+  <Route fallback><NotFound /></Route>
 </main>

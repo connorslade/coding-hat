@@ -21,7 +21,7 @@ fn main() {
     // Make sure web dist has been built
     if !PathBuf::from("web/dist").exists() {
         println!("[-] Web dist not built!");
-        return;
+        // return;
     }
     r#const::init();
 
