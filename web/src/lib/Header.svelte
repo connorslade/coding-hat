@@ -21,7 +21,7 @@
 
   <div class="border border-slate-700 rounded m-1 h-1/2" />
 
-  {#each ["home", "events", "about"] as p}
+  {#each ["home", "about"] as p}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="cursor-pointer bg-slate-800 hover:bg-slate-700 rounded p-1.5 px-2 ml-1.5"
@@ -48,7 +48,8 @@
         width="36px"
         height="auto"
         title="Your Profile"
-        alt="Your profile icon"
+        alt="icon"
+        referrerpolicy="no-referrer"
         class="cursor-pointer bg-slate-800 hover:bg-slate-700 rounded mr-1.5"
         on:click={() => router.goto(`/profile/${state.id}`)}
       />

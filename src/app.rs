@@ -1,5 +1,8 @@
 use std::collections::HashMap;
+use std::env;
 use std::fs;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 use parking_lot::Mutex;
 use rusqlite::Connection;
@@ -7,10 +10,10 @@ use rusqlite::Connection;
 use crate::{config::Config, problem::Problem};
 
 pub struct App {
-    /// System config
     pub config: Config,
-    /// Database
+    pub data_folder: PathBuf,
     pub db: Mutex<Connection>,
+    
     // Oauth states (state, epoch)
     // TODO: garbage collect
     pub oauth_states: Mutex<Vec<(String, u64)>>,
@@ -22,7 +25,10 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        let config = Config::load("./data/config.cfg");
+        // get data folder from env vars
+        let data_folder =
+            PathBuf::from_str(&env::args().nth(1).unwrap_or_else(|| "./data".to_owned())).unwrap();
+        let config = Config::load(data_folder.join("config.cfg"));
         let mut problems = HashMap::new();
 
         // Load problems
@@ -66,6 +72,7 @@ impl App {
         App {
             db: Mutex::new(conn),
             oauth_states: Mutex::new(Vec::new()),
+            data_folder,
             problems,
             config,
         }
