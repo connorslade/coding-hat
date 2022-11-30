@@ -6,4 +6,4 @@
 - [x] Fix profile images
 - [ ] Add a timeout field to problem tags
 - [ ] Write problem file docs (thare is no way im remebering how they work)
-- [ ] Make logout API
+- [x] Make logout API
