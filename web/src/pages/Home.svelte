@@ -1,7 +1,7 @@
 <script>
   import Content from "../lib/Content.svelte";
   import Header from "../lib/Header.svelte";
-  import { state } from "../state";
+  import { randStr, state } from "../state";
 
   let user = null;
   state.getUser().then((u) => (user = u));
@@ -15,7 +15,9 @@
     <p>
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       You can
-      <span class="link" on:click={() => (location.pathname = "/auth/redirect")}
+      <span
+        class="link"
+        on:click={() => (document.location = `/auth/redirect?${randStr()}`)}
         >login with google</span
       >
       to get started!

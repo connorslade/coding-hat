@@ -30,4 +30,8 @@ function getCookie(name) {
   return matches ? decodeURIComponent(matches[1]) : undefined;
 }
 
+export function randStr() {
+  return Math.random().toString(16).substring(2, 8);
+}
+
 export let state = new State();

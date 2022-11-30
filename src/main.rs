@@ -31,7 +31,9 @@ fn main() {
     let workers = app.config.workers;
 
     // Init Server
-    let mut server = Server::<App>::new(&app.config.host, app.config.port).state(app);
+    let mut server = Server::<App>::new(&app.config.host, app.config.port)
+        .buffer(2048)
+        .state(app);
     ServeStatic::new("web/dist")
         .not_found(|_req, _dis| {
             Response::new()

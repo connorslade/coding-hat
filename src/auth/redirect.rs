@@ -18,18 +18,19 @@ pub fn attach(server: &mut Server<App>) {
             .unwrap()
             .as_secs();
 
-        app.oauth_states
-            .lock()
-            .push((state.to_owned(), epoch));
+        app.oauth_states.lock().push((state.to_owned(), epoch));
 
         let redirect = format!(
-                "https://accounts.google.com/o/oauth2/v2/auth?client_id={}&redirect_uri={}/auth/complete&response_type=code&scope=profile&state={}",
-                app.config.client_id, urlencoding::encode(&app.config.external_url), state
-            );
+            "https://accounts.google.com/o/oauth2/v2/auth?client_id={}&redirect_uri={}/auth/complete&response_type=code&scope=profile&state={}",
+            app.config.client_id,
+            urlencoding::encode(&app.config.external_url),
+            state
+        );
 
-        Response::new().status(308).header(
-            "Location",
-            &redirect,
-        ).text(format!("Redirecting to {}", redirect))
+        Response::new()
+            .status(307)
+            .header("Location", &redirect)
+            .header("Cache-Control", "no-store")
+            .text(format!("Redirecting to {}", redirect))
     });
 }

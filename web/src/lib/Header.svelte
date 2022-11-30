@@ -2,7 +2,7 @@
   import { ArrowRightOnRectangle, ArrowLeftOnRectangle } from "svelte-heros-v2";
   import { router } from "tinro";
   import favicon from "../assets/favicon-32x32.png";
-  import { state } from "../state";
+  import { randStr, state } from "../state";
 
   export let page = null;
 
@@ -41,7 +41,7 @@
       name="log-in"
       title="Log In"
       class="log ml-auto cursor-pointer bg-slate-800 hover:bg-slate-700 rounded m-1.5 inline-block"
-      on:click={() => (location.pathname = "/auth/redirect")}
+      on:click={() => (document.location = `/auth/redirect?${randStr()}`)}
     />
   {:else}
     <div class="ml-auto flex mr-1.5">
@@ -62,7 +62,7 @@
         name="log-out"
         title="Log Out"
         class="log cursor-pointer bg-slate-800 hover:bg-slate-700 rounded"
-        on:click={() => (location.pathname = "/auth/logout")}
+        on:click={() => (document.location = `/auth/logout?${randStr()}`)}
       />
     </div>
   {/if}
