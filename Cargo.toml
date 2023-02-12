@@ -5,8 +5,8 @@ name = "coding_hat"
 version = "0.1.0"
 
 [dependencies]
-afire = {version = "1.2.0", features = ["extensions", "tracing"]}
-comrak = "0.14.0"
+afire = {version = "2.0.0", features = ["extensions", "tracing"]}
+comrak = "0.16.0"
 ctrlc = "3.2.3"
 lazy_static = "1.4.0"
 parking_lot = "0.12.1"

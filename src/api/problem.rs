@@ -5,7 +5,7 @@ use crate::{problem::Language, App};
 
 pub fn attach(server: &mut Server<App>) {
     server.stateful_route(Method::GET, "/api/problem/{id}", |app, req| {
-        let id = req.path_param("id").unwrap();
+        let id = req.param("id").unwrap();
         let problem = match app.problems.get(&id) {
             Some(i) => i,
             None => {

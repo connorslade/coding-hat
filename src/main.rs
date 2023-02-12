@@ -1,4 +1,4 @@
-use std::fs;
+use std::fs::{self, File};
 use std::path::PathBuf;
 use std::process;
 
@@ -31,13 +31,11 @@ fn main() {
     let workers = app.config.workers;
 
     // Init Server
-    let mut server = Server::<App>::new(&app.config.host, app.config.port)
-        .buffer(2048)
-        .state(app);
+    let mut server = Server::<App>::new(app.config.host.as_str(), app.config.port).state(app);
     ServeStatic::new("web/dist")
         .not_found(|_req, _dis| {
             Response::new()
-                .bytes(fs::read("web/dist/index.html").expect("Webpage not built"))
+                .stream(File::open("web/dist/index.html").expect("Webpage not built"))
                 .content(Content::HTML)
         })
         .attach(&mut server);
