@@ -26,6 +26,9 @@
 
   export let id;
   let group = {
+    name: "Test Group",
+    description: "<p>This is a test group</p>",
+    due: 1630000000000,
     problems: [
       {
         id: "201517",
@@ -46,12 +49,16 @@
 <Header page={"group"} />
 
 <Content>
-  <!-- DESCRIPTION -->
-
-  <h1 class="text-2xl">Test Group</h1>
-  <p>This is a test group</p>
-
-  <!-- END DESCRIPTION -->
+  <div class="flex content-around items-center">
+    <h1 class="text-2xl">{group.name}</h1>
+    {#if group.due}
+      <span
+        class="ml-auto text-xs py-1 px-2.5 font-bold bg-slate-600 text-slate-100 rounded h-6"
+        >Due {new Date(group.due).toDateString()}</span
+      >
+    {/if}
+  </div>
+  {@html group.description}
 
   <br />
   <p class="text-2xl">

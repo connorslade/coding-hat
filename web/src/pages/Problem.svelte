@@ -3,16 +3,35 @@
   import Header from "../lib/Header.svelte";
 
   export let id;
+  export let pid;
+  console.log(id);
+  let problem = null;
+  // onMount(async () => {
+  //   let res = await fetch(`/api/problem/${meta.params.id}`);
+  //   let data = await res.json();
+  //   console.log(data);
+  //   problem = data;
+  // });
+
+  fetch(`/api/problem/${pid}`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log(data);
+      problem = data;
+    });
 </script>
 
 <Header page={"problem"} />
 
 <Content>
-  <a
-    class="font-bold underline"
-    href="https://github.com/Basicprogrammer10/amplify/blob/6cf0ca45ae55dbe012cc5582c6d9b88da8be9526/web/static/index.html#L134"
-    >TODO: this</a
-  >
+  {#if problem}
+    <h1 class="font-bold underline text-2xl">{problem?.name}</h1>
+    <p>{@html problem?.text}</p>
+    <br />
+    <hr />
 
-  <p>Mango</p>
+    <p>TODO: Editor</p>
+  {:else}
+    <p>Loading...</p>
+  {/if}
 </Content>

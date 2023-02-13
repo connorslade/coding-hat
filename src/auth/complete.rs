@@ -38,7 +38,7 @@ pub fn attach(server: &mut Server<App>) {
             }
 
             if real_state.0 != state {
-                return json_err("State Dosent Match");
+                return json_err("State doesn't match");
             }
         }
 

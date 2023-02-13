@@ -25,7 +25,7 @@
   {:else}
     <h1>
       {user.new
-        ? `Welcome to Codeing Hat, ${user.name}`
+        ? `Welcome to Coding Hat, ${user.name}`
         : `Welcome back, ${user.name}`}
     </h1>
     <p>Why not try an <a class="link" href="/p/200079">example problem</a>!</p>
